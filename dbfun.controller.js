@@ -169,7 +169,8 @@ export const readApiFn = async (req, res) => {
     result = await con.query(sql)
     // console.log('Database selected')
 
-    //    `SELECT
+    // View in Pretty Print
+    // {  `SELECT
     //     UI.ID,
     //     UI.NAME,
     //     UI.AGE,
@@ -181,7 +182,8 @@ export const readApiFn = async (req, res) => {
     // INNER JOIN 
     //     USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID
     // ORDER BY 
-    //     UI.ID;`
+    //     UI.ID;
+    //     ` }
 
     sql = `SELECT UI.ID, UI.NAME, UI.AGE, UID.ADDRESS, UID.CITY, UID.COUNTRY FROM USERS_INFO AS UI INNER JOIN USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID ORDER BY UI.ID;`
     // console.log('sql value just before exe: ', sql)
@@ -198,33 +200,56 @@ export const readApiFn = async (req, res) => {
 export const deleteApiFn = async (req, res) => {
     const { id } = req.body
 
-    sql = 'USE USERS_DB;'
-    result = await con.query(sql)
+    if (!id) {
 
-    sql = 'DELETE FROM USERS_INFO WHERE ID= ?;'
-    result = await con.query(sql, [id])
-
-    // console.log(result)
-
-    // FOR DEBUG
-    // res
-    //     .status(200)
-    //     .json(result)
-
-    // for log
-    result[0]?.affectedRows == 0 ? console.log('User does not exits') : console.log('Deleted user ', result[0]?.info)
-
-    // for user
-    if (result[0]?.affectedRows != 0) {
-        res
-            .status(200)
-            .json({ message: 'User DELETED successfully!' })
-    } else {
-        res
-            .status(422) //200 is also ok
-            .json({ message: 'User does not exits' })
+        return res
+            .status(400)
+            .json({ message: 'User ID is required' })
     }
 
+    try {
+        await con.beginTransaction()
+
+        sql = 'USE USERS_DB;'
+        result = await con.query(sql)
+
+        sql = 'DELETE FROM USERS_INFO_DETAILS WHERE ID= ?;'
+        result = await con.query(sql, [id])
+
+        if (result[0]?.affectedRows == 0) {
+            res
+            .status(422)
+            .json({ message: 'User does not exits' })
+        }
+
+        sql = 'DELETE FROM USERS_INFO WHERE ID= ?;'
+        result = await con.query(sql, [id])
+
+        await con.commit()
+        
+        res
+        .status(200)
+        .json({ message: 'User deleted successfully!' })
+        
+    } catch (error) {
+        
+        if (con) {
+            try {
+                await con.rollback()
+                console.log('Transaction rolled back successfully.')
+            } catch (error) {
+                console.log('Error during transaction rollback:', error)
+            }
+        }
+        
+        console.error('connection error, Error deleting user:', error)
+        
+        res
+        .status(422) //200 is also ok
+            .json({ message: 'User does not exits, or try again later' })
+    }
+    
+    // result[0]?.affectedRows == 0 ? console.log('User does not exits') : console.log('Deleted user ', result[0]?.info)
 }
 
 export default connectionFn;
