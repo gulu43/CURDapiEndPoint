@@ -164,21 +164,34 @@ export const updateApiFn = async (req, res) => {
 
 // read
 export const readApiFn = async (req, res) => {
+
     sql = 'USE USERS_DB;'
-
     result = await con.query(sql)
-
     // console.log('Database selected')
 
-    sql = 'SELECT * FROM USERS_INFO'
-    console.log('sql value just before exe: ', sql)
+    //    `SELECT
+    //     UI.ID,
+    //     UI.NAME,
+    //     UI.AGE,
+    //     UID.ADDRESS,
+    //     UID.CITY,
+    //     UID.COUNTRY
+    // FROM
+    //     USERS_INFO AS UI
+    // INNER JOIN 
+    //     USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID
+    // ORDER BY 
+    //     UI.ID;`
+
+    sql = `SELECT UI.ID, UI.NAME, UI.AGE, UID.ADDRESS, UID.CITY, UID.COUNTRY FROM USERS_INFO AS UI INNER JOIN USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID ORDER BY UI.ID;`
+    // console.log('sql value just before exe: ', sql)
 
     result = await con.query(sql)
     console.log(result[0])
 
     res
         .status(200)
-        .json(result)
+        .json(result[0])
 }
 
 // delete
