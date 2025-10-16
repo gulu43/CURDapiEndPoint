@@ -1,35 +1,21 @@
-import axios from 'axios'
 import mysql2 from 'mysql2/promise'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
-import dotenv from 'dotenv'
+import { con } from './connection.db.js'
+import './path_and_env.js'
 
 // making Path 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = path.dirname(__filename)
 
-const dotenvPath = path.resolve(__dirname, '.env')
+// const dotenvPath = path.resolve(__dirname, '.env')
 
-dotenv.config({
-    path: dotenvPath
-})
+// dotenv.config({
+//     path: dotenvPath
+// })
 
-let con;
 let sql = ''
 let result = []
 let pId;
 let check;
-
-async function connectionFn() {
-    con = await mysql2.createConnection({
-        host: process.env.HOSTTYPE == 'localhost' ? 'localhost' : process.env.HOST,
-        port: process.env.MYSQLDBPORT,
-        user: process.env.USERDB,
-        password: process.env.PASSDB
-    })
-    console.log('Database connected successfully')
-
-}
 
 export const homeApiFn = async (req, res) => {
     console.log('HOME');
@@ -252,4 +238,3 @@ export const deleteApiFn = async (req, res) => {
     // result[0]?.affectedRows == 0 ? console.log('User does not exits') : console.log('Deleted user ', result[0]?.info)
 }
 
-export default connectionFn;
