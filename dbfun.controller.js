@@ -18,7 +18,7 @@ let con;
 let sql = ''
 let result = []
 let pId;
-let fields = []
+let check;
 
 async function connectionFn() {
     con = await mysql2.createConnection({
@@ -97,28 +97,69 @@ export const addApiFn = async (req, res) => {
 // update
 export const updateApiFn = async (req, res) => {
 
-    const { name, age, id } = req.body
+    const { id, name, age, address, city, country } = req.body
 
-    sql = 'USE USERS_DB;'
-    result = await con.query(sql)
+    if (!id) {
 
-    sql = 'UPDATE USERS_INFO SET NAME= ?, AGE= ? WHERE ID= ?;'
-    result = await con.query(sql, [name, age, id])
+        return res
+            .status(400)
+            .json({
+                message: `User ID is required\n
+             (This response is for Founted Dev,Send id from cookie, storage, etc)`
+            })
+    }
 
-    // for log
-    result[0]?.affectedRows == 0 ? console.log('User does not exits ') : console.log('Updated user: ', result[0]?.info)
+    check = [name, address, city, country].filter((ele) => ele.trim() === '')
+    if (check.length > 0) {
+        return res
+            .status(400)
+            .json({ message: 'No feild should be empty!' })
+    }
 
-    // for user
-    if (result[0]?.affectedRows != 0) {
+    check = [name, address, city, country].filter((ele) => !ele)
+    if (check.length > 0) {
+        return res
+            .status(400)
+            .json({ message: 'No feild should be undefined!' })
+    }
+
+    try {
+
+        await con.beginTransaction()
+
+        sql = 'USE USERS_DB;'
+        result = await con.query(sql)
+
+        sql = 'UPDATE USERS_INFO SET NAME= ?, AGE= ? WHERE ID= ?;'
+        result = await con.query(sql, [name, age, id])
+
+        sql = 'UPDATE USERS_INFO_DETAILS SET ADDRESS= ?, CITY= ?, COUNTRY= ? WHERE ID= ?;'
+        result = await con.query(sql, [address, city, country, id])
+
+        await con.commit();
+
         res
             .status(200)
             .json({ message: 'User updated successfully!' })
-    } else {
+
+    } catch (error) {
+
+        if (con) {
+            try {
+                await con.rollback()
+                console.log('Transaction rolled back successfully.')
+            } catch (error) {
+                console.error('Error during transaction rollback:', error)
+            }
+        }
+
+        console.error('connection error, Error updating user:', error)
+
         res
             .status(422) //200 is also ok
-            .json({ message: 'User does not exits' })
-    }
+            .json({ message: 'User does not exits, or try again later' })
 
+    }
 }
 
 // read
