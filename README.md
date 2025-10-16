@@ -33,5 +33,20 @@ CREATE TABLE USER_INFO (
     CHECK (AGE >= 16)
 );
 
+--  Create the details table (USERS_INFO_DETAILS)
+CREATE TABLE USERS_INFO_DETAILS(
+    ID INT PRIMARY KEY,
+    ADDRESS VARCHAR(200) NOT NULL,
+    CITY VARCHAR(50) NOT NULL,
+    COUNTRY VARCHAR(50) NOT NULL,
+    FOREIGN KEY(ID) REFERENCES USERS_INFO(ID)
+);
+
+-- Add the check constraint for minimum length
+-- Note: This requires existing rows to be valid or the table to be empty.
+ALTER TABLE USERS_INFO_DETAILS
+ADD CONSTRAINT CHK_MinAddressLength
+CHECK (LENGTH(ADDRESS) > 2 AND LENGTH(CITY) > 2 AND LENGTH(COUNTRY) > 2);
+
 Node.js, MySql
 dependencies: express, mysql2, cors, dotenv 
