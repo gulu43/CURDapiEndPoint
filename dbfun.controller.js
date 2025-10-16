@@ -17,7 +17,7 @@ dotenv.config({
 let con;
 let sql = ''
 let result = []
-let rows = []
+let pId;
 let fields = []
 
 async function connectionFn() {
@@ -32,31 +32,68 @@ async function connectionFn() {
 }
 
 export const homeApiFn = async (req, res) => {
+    console.log('HOME');
+
     res
         .status(200)
-        .json('ok')
+        .json('HOME')
 }
 
 // create
 export const addApiFn = async (req, res) => {
-    const { name, age } = req.body
+    const { name, age, address, city, country } = req.body
+    // + result[0]?.insertId (for id)
 
-    sql = 'USE USERS_DB;'
-    console.log('sql value just before exe: ', sql)
+    try {
 
-    result = await con.query(sql)
+        await con.beginTransaction()
 
-    sql = 'INSERT INTO USERS_INFO (NAME, AGE) VALUES (?, ?)'
-    result = await con.query(sql, [name, age])
-    // console.log(result)
+        sql = 'USE USERS_DB;'
+        // console.log('sql value just before exe: ', sql)
+        result = await con.query(sql)
 
-    console.log('Inserted id: ', result[0]?.insertId)
+        sql = 'INSERT INTO USERS_INFO (NAME, AGE) VALUES (?, ?)'
+        result = await con.query(sql, [name, age])
 
-    res
-        .status(201)
-        .json({ message: 'User added successfully!' })
+        pId = result[0]?.insertId
+        console.log('Inserted id: ', pId)
 
+        // Second table insersion
+        // pId = 100 // for testing
+        sql = 'INSERT INTO USERS_INFO_DETAILS VALUES (?, ?, ?, ?);'
+        result = await con.query(sql, [pId, address, city, country])
+        console.log('Inserted id in Details_TB: ', result[0]?.insertId)
+
+        con.commit()
+
+        res
+            .status(201)
+            .json({ message: 'User added successfully!' })
+
+    } catch (error) {
+        // {sql = `DELETE USERS_INFO WHERE ID = ${pId}`
+        // await con.query(sql)
+        // sql = `DELETE USERS_INFO_DETAILS WHERE ID = ${pId}`
+        // await con.query(sql)}
+
+        if (con) {
+            try {
+                await con.rollback();
+                console.log('Transaction rolled back successfully.');
+            } catch (rollbackError) {
+                console.error('Error during transaction rollback:', rollbackError);
+            }
+        }
+        console.error('connection error, Error adding user:', error)
+
+        // to user
+        res
+            .status(500)
+            .json({ message: 'Something went rong, while adding user, plz try again later' })
+
+    }
 }
+
 // update
 export const updateApiFn = async (req, res) => {
 
