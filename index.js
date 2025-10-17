@@ -2,7 +2,7 @@ import connectionFn from './connection.db.js'
 import express from 'express'
 import cors from 'cors'
 import userRout from './config.routes.js'
-import { homeApiFn, addApiFn, updateApiFn, readApiFn, deleteApiFn } from './dbfun.controller.js'
+import { homeApiFn, loginApiFn, addApiFn, updateApiFn, readApiFn, deleteApiFn } from './dbfun.controller.js'
 import { publicFolderPath } from './path_and_env.js'
 
 // express added
@@ -25,6 +25,7 @@ const hi = (req, res, next) => {
 
 // routes with endpoints
 app.get(`${userRout}/home`, homeApiFn)
+app.get(`${userRout}/login`, loginApiFn)
 app.post(`${userRout}/insert`, addApiFn)
 app.patch(`${userRout}/update`, updateApiFn)
 app.get(`${userRout}/read`, hi, readApiFn)

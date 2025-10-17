@@ -1,5 +1,6 @@
 import mysql2 from 'mysql2/promise'
 import { con } from './connection.db.js'
+import bcrypt from 'bcrypt'
 import './path_and_env.js'
 
 // making Path 
@@ -25,10 +26,21 @@ export const homeApiFn = async (req, res) => {
         .json('HOME')
 }
 
+export const loginApiFn = async (req, res) => {
+    console.log('login');
+
+    res
+        .status(200)
+        .json('login')
+}
+
 // create
 export const addApiFn = async (req, res) => {
-    const { name, age, address, city, country } = req.body
+    const { name, age, usersname, password, address, city, country, phone_no, image_url } = req.body
     // + result[0]?.insertId (for id)
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    // bool_value = await bcrypt.compare(userPassword, dbPassword);
 
     try {
 
@@ -38,16 +50,16 @@ export const addApiFn = async (req, res) => {
         // console.log('sql value just before exe: ', sql)
         result = await con.query(sql)
 
-        sql = 'INSERT INTO USERS_INFO (NAME, AGE) VALUES (?, ?)'
-        result = await con.query(sql, [name, age])
+        sql = 'INSERT INTO USERS_INFO (NAME, AGE, USERSNAME, PASSWORD) VALUES (?, ?, ?, ?);'
+        result = await con.query(sql, [name, age, usersname, hashedPassword])
 
         pId = result[0]?.insertId
         console.log('Inserted id: ', pId)
 
         // Second table insersion
         // pId = 100 // for testing
-        sql = 'INSERT INTO USERS_INFO_DETAILS VALUES (?, ?, ?, ?);'
-        result = await con.query(sql, [pId, address, city, country])
+        sql = 'INSERT INTO USERS_INFO_DETAILS VALUES (?, ?, ?, ?, ?, ?);'
+        result = await con.query(sql, [pId, address, city, country, phone_no, image_url])
         console.log('Inserted id in Details_TB: ', result[0]?.insertId)
 
         con.commit()
@@ -62,14 +74,14 @@ export const addApiFn = async (req, res) => {
         // sql = `DELETE USERS_INFO_DETAILS WHERE ID = ${pId}`
         // await con.query(sql)}
 
-        if (con) {
-            try {
-                await con.rollback();
-                console.log('Transaction rolled back successfully.');
-            } catch (rollbackError) {
-                console.error('Error during transaction rollback:', rollbackError);
-            }
+
+        try {
+            await con.rollback();
+            console.log('Transaction rolled back successfully.');
+        } catch (rollbackError) {
+            console.error('Error during transaction rollback:', rollbackError);
         }
+
         console.error('connection error, Error adding user:', error)
 
         // to user
@@ -83,10 +95,11 @@ export const addApiFn = async (req, res) => {
 // update
 export const updateApiFn = async (req, res) => {
 
-    const { id, name, age, address, city, country } = req.body
+    // const { id, name, age, address, city, country } = req.body
+    const {id, name, age, address, city, country, phone_no, image_url } = req.body
+
 
     if (!id) {
-
         return res
             .status(400)
             .json({
@@ -95,7 +108,7 @@ export const updateApiFn = async (req, res) => {
             })
     }
 
-    check = [name, address, city, country].filter((ele) => ele.trim() === '')
+    check = [name, address, city, country, phone_no].filter((ele) => ele.trim() === '')
     if (check.length > 0) {
         return res
             .status(400)
@@ -119,10 +132,10 @@ export const updateApiFn = async (req, res) => {
         sql = 'UPDATE USERS_INFO SET NAME= ?, AGE= ? WHERE ID= ?;'
         result = await con.query(sql, [name, age, id])
 
-        sql = 'UPDATE USERS_INFO_DETAILS SET ADDRESS= ?, CITY= ?, COUNTRY= ? WHERE ID= ?;'
-        result = await con.query(sql, [address, city, country, id])
+        sql = 'UPDATE USERS_INFO_DETAILS SET ADDRESS= ?, CITY= ?, COUNTRY= ?, PHONE_NO= ?, IMAGE_URL= ? WHERE ID= ?;'
+        result = await con.query(sql, [address, city, country, phone_no, image_url, id])
 
-        await con.commit();
+        await con.commit()
 
         res
             .status(200)
@@ -130,16 +143,16 @@ export const updateApiFn = async (req, res) => {
 
     } catch (error) {
 
-        if (con) {
-            try {
-                await con.rollback()
-                console.log('Transaction rolled back successfully.')
-            } catch (error) {
-                console.error('Error during transaction rollback:', error)
-            }
+
+        try {
+            await con.rollback()
+            console.log('Transaction rolled back successfully.')
+        } catch (error) {
+            console.log('Error during transaction rollback:', error)
         }
 
-        console.error('connection error, Error updating user:', error)
+
+        console.log('connection error, Error updating user:', error)
 
         res
             .status(422) //200 is also ok
@@ -157,12 +170,18 @@ export const readApiFn = async (req, res) => {
 
     // View in Pretty Print
     // {  `SELECT
-    //     UI.ID,
-    //     UI.NAME,
-    //     UI.AGE,
-    //     UID.ADDRESS,
-    //     UID.CITY,
-    //     UID.COUNTRY
+    // UI.ID,
+    // UI.NAME,
+    // UI.AGE,
+    // UI.USERSNAME,
+    // UI.PASSWORD,
+    // UI.STATUS,
+    // UI.CREATED_AT,
+    // UID.ADDRESS,
+    // UID.CITY,
+    // UID.COUNTRY,
+    // UID.PHONE_NO,
+    // UID.IMAGE_URL
     // FROM
     //     USERS_INFO AS UI
     // INNER JOIN 
@@ -171,7 +190,7 @@ export const readApiFn = async (req, res) => {
     //     UI.ID;
     //     ` }
 
-    sql = `SELECT UI.ID, UI.NAME, UI.AGE, UID.ADDRESS, UID.CITY, UID.COUNTRY FROM USERS_INFO AS UI INNER JOIN USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID ORDER BY UI.ID;`
+    sql = `SELECT UI.ID, UI.NAME, UI.AGE, UI.USERSNAME, UI.PASSWORD, UI.STATUS, UI.CREATED_AT, UID.ADDRESS, UID.CITY, UID.COUNTRY, UID.PHONE_NO, UID.IMAGE_URL FROM USERS_INFO AS UI INNER JOIN USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID ORDER BY UI.ID;`
     // console.log('sql value just before exe: ', sql)
 
     result = await con.query(sql)
@@ -204,37 +223,37 @@ export const deleteApiFn = async (req, res) => {
 
         if (result[0]?.affectedRows == 0) {
             res
-            .status(422)
-            .json({ message: 'User does not exits' })
+                .status(422)
+                .json({ message: 'User does not exits' })
         }
 
         sql = 'DELETE FROM USERS_INFO WHERE ID= ?;'
         result = await con.query(sql, [id])
 
         await con.commit()
-        
+
         res
-        .status(200)
-        .json({ message: 'User deleted successfully!' })
-        
+            .status(200)
+            .json({ message: 'User deleted successfully!' })
+
     } catch (error) {
-        
-        if (con) {
-            try {
-                await con.rollback()
-                console.log('Transaction rolled back successfully.')
-            } catch (error) {
-                console.log('Error during transaction rollback:', error)
-            }
+
+
+        try {
+            await con.rollback()
+            console.log('Transaction rolled back successfully.')
+        } catch (error) {
+            console.log('Error during transaction rollback:', error)
         }
-        
+
+
         console.error('connection error, Error deleting user:', error)
-        
+
         res
-        .status(422) //200 is also ok
+            .status(422) //200 is also ok
             .json({ message: 'User does not exits, or try again later' })
     }
-    
+
     // result[0]?.affectedRows == 0 ? console.log('User does not exits') : console.log('Deleted user ', result[0]?.info)
 }
 
