@@ -1,5 +1,4 @@
 .env
 node_modules
 package.json
-public
-uploads
+public/uploads/

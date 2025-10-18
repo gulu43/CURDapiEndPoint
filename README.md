@@ -2,6 +2,7 @@ Node.js CRUD Application with MySQL
 
 A CRUD (Create, Read, Update, Delete) application built using Node.js, Express, and MySQL. This Mini-project demonstrates proper code organization, input validation, and best practices for building RESTful APIs. The database is managed via MySQL CLI, and the code is modular to allow easy scaling and maintainability.
 
+Note there is also a public\uploads folder is there you have to make it in root folder
 Project Overview
 
 This project is a backend RESTful API for managing users. It provides endpoints to:
