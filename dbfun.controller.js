@@ -1,8 +1,8 @@
 import mysql2 from 'mysql2/promise'
 import { con } from './connection.db.js'
 import bcrypt from 'bcrypt'
-import './path_and_env.js'
-
+import { profilePathForDbFn, publicFolderPath } from './path_and_env.js'
+import path from 'node:path'
 // making Path 
 // const __filename = fileURLToPath(import.meta.url)
 // const __dirname = path.dirname(__filename)
@@ -19,7 +19,18 @@ let pId;
 let check;
 
 export const homeApiFn = async (req, res) => {
-    console.log('HOME');
+    console.log(req.body);
+    console.log(req.file);
+
+    const { name } = req.body
+    const { path, filename } = req.file
+    const relativeProfilePathDbStore = profilePathForDbFn(filename)
+
+
+    console.log('HOME')
+    console.log('name: ', name)
+    console.log('StoredFilePathWithName: ', relativeProfilePathDbStore)
+
 
     res
         .status(200)
@@ -36,7 +47,12 @@ export const loginApiFn = async (req, res) => {
 
 // create
 export const addApiFn = async (req, res) => {
-    const { name, age, usersname, password, address, city, country, phone_no, image_url } = req.body
+    const { path, filename } = req.file
+    // uploads+filename
+    const relativeProfilePathDbStore = profilePathForDbFn(filename)
+    // console.log('like this: ', path )
+
+    const { name, age, usersname, password, address, city, country, phone_no } = req.body
     // + result[0]?.insertId (for id)
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -59,7 +75,7 @@ export const addApiFn = async (req, res) => {
         // Second table insersion
         // pId = 100 // for testing
         sql = 'INSERT INTO USERS_INFO_DETAILS VALUES (?, ?, ?, ?, ?, ?);'
-        result = await con.query(sql, [pId, address, city, country, phone_no, image_url])
+        result = await con.query(sql, [pId, address, city, country, phone_no, relativeProfilePathDbStore])
         console.log('Inserted id in Details_TB: ', result[0]?.insertId)
 
         con.commit()
@@ -95,8 +111,10 @@ export const addApiFn = async (req, res) => {
 // update
 export const updateApiFn = async (req, res) => {
 
-    // const { id, name, age, address, city, country } = req.body
-    const {id, name, age, address, city, country, phone_no, image_url } = req.body
+    const { path, filename } = req.file
+    const relativeProfilePathDbStore = profilePathForDbFn(filename)
+
+    const { id, name, age, address, city, country, phone_no } = req.body
 
 
     if (!id) {
@@ -129,11 +147,27 @@ export const updateApiFn = async (req, res) => {
         sql = 'USE USERS_DB;'
         result = await con.query(sql)
 
+        // for Unlink previous file
+        sql = 'SELECT IMAGE_URL FROM USERS_INFO_DETAILS WHERE ID = ?'
+        result = await con.query(sql, [id])
+        console.log(result)
+
+        if (result.length > 0 && result[0].IMAGE_URL) {
+            const oldImagePath = path.resolve(publicFolderPath, result[0].IMAGE_URL)
+
+            try {
+                await fs.unlink(oldImagePath)
+                console.log('Old image deleted:', oldImagePath)
+            } catch (err) {
+                console.log('Old image not found:', oldImagePath)
+            }
+        }
+
         sql = 'UPDATE USERS_INFO SET NAME= ?, AGE= ? WHERE ID= ?;'
         result = await con.query(sql, [name, age, id])
 
         sql = 'UPDATE USERS_INFO_DETAILS SET ADDRESS= ?, CITY= ?, COUNTRY= ?, PHONE_NO= ?, IMAGE_URL= ? WHERE ID= ?;'
-        result = await con.query(sql, [address, city, country, phone_no, image_url, id])
+        result = await con.query(sql, [address, city, country, phone_no, relativeProfilePathDbStore, id])
 
         await con.commit()
 

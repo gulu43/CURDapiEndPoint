@@ -4,6 +4,7 @@ import cors from 'cors'
 import userRout from './config.routes.js'
 import { homeApiFn, loginApiFn, addApiFn, updateApiFn, readApiFn, deleteApiFn } from './dbfun.controller.js'
 import { publicFolderPath } from './path_and_env.js'
+import upload from './fileHandle.multer.js'
 
 // express added
 const app = express()
@@ -24,10 +25,10 @@ const hi = (req, res, next) => {
 }
 
 // routes with endpoints
-app.get(`${userRout}/home`, homeApiFn)
+app.post(`${userRout}/home`, upload.single('profile_photo'), homeApiFn)
 app.get(`${userRout}/login`, loginApiFn)
-app.post(`${userRout}/insert`, addApiFn)
-app.patch(`${userRout}/update`, updateApiFn)
+app.post(`${userRout}/insert`, upload.single('profile_photo'), addApiFn)
+app.patch(`${userRout}/update`,upload.single('profile_photo'), updateApiFn)
 app.get(`${userRout}/read`, hi, readApiFn)
 app.delete(`${userRout}/delete`, deleteApiFn)
 
