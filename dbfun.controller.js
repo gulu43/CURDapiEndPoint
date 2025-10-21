@@ -19,30 +19,74 @@ let pId;
 let check;
 
 export const homeApiFn = async (req, res) => {
-    console.log(req.body);
-    console.log(req.file);
+    // console.log(req.body);
+    // console.log(req.file);
 
-    const { name } = req.body
-    const { path, filename } = req.file
-    const relativeProfilePathDbStore = profilePathForDbFn(filename)
+    // const { name } = req.body
+    // const { path, filename } = req.file
+    // const relativeProfilePathDbStore = profilePathForDbFn(filename)
+
+    // console.log('HOME')
+    // console.log('name: ', name)
+    // console.log('StoredFilePathWithName: ', relativeProfilePathDbStore)
 
 
     console.log('HOME')
-    console.log('name: ', name)
-    console.log('StoredFilePathWithName: ', relativeProfilePathDbStore)
-
-
     res
         .status(200)
         .json('HOME')
 }
 
 export const loginApiFn = async (req, res) => {
-    console.log('login');
+    // console.dir(req.body, { depth: null, colors: true })
 
-    res
-        .status(200)
-        .json('login')
+    const { id, usersname, pass } = req.body
+    Number(id)
+
+    if (!id || !pass || !usersname) {
+        return res
+            .status(403)
+            .json({
+                message: `User Username and Pass are required`
+            })
+    }
+
+    sql = 'USE USERS_DB;'
+    result = await con.query(sql)
+
+    sql = 'SELECT USERSNAME, PASSWORD, STATUS FROM USERS_INFO WHERE ID= ?'
+    result = await con.query(sql, [id])
+    // console.log('result of getting user name password: ', result[0][0])
+
+    // console.log("compare arguments: ", pass, result[0][0].PASSWORD);
+    const comparingPassword = await bcrypt.compare(pass, result[0][0].PASSWORD)
+
+    if (usersname == result[0][0].USERSNAME && comparingPassword == true && result[0][0].STATUS == 'Active') {
+        console.log('User loged in')
+        res
+            // .status(302)
+            // .redirect(`${userRout}/home`)
+            .status(200)
+            .json({
+                status: result[0][0].STATUS,
+                message: 'You loged in'
+            })
+    } else {
+        if (result[0][0].STATUS == 'Inactive') {
+            res
+                .status(403)
+                .json({
+                    status: 'Inactive',
+                    message: 'Your account is Status is Inactive\n Please Contact Support team support@compayemail.com'
+                })
+        }
+        else {
+            res
+                .status(403)
+                .json('Password or username is roung')
+        }
+    }
+
 }
 
 // create

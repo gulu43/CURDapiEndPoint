@@ -25,10 +25,10 @@ const hi = (req, res, next) => {
 }
 
 // routes with endpoints
-app.post(`${userRout}/home`, upload.single('profile_photo'), homeApiFn)
-app.get(`${userRout}/login`, loginApiFn)
+app.get(`${userRout}/home`, homeApiFn)
+app.post(`${userRout}/login`, upload.none(), loginApiFn)
 app.post(`${userRout}/insert`, upload.single('profile_photo'), addApiFn)
-app.patch(`${userRout}/update`,upload.single('profile_photo'), updateApiFn)
+app.patch(`${userRout}/update`, upload.single('profile_photo'), updateApiFn)
 app.get(`${userRout}/read`, hi, readApiFn)
 app.delete(`${userRout}/delete`, deleteApiFn)
 
