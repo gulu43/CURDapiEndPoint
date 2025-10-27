@@ -76,8 +76,8 @@ export const loginApiFn = async (req, res) => {
             res
                 .status(403)
                 .json({
-                    status: 'Inactive',
-                    message: 'Your account is Status is Inactive\n Please Contact Support team support@compayemail.com'
+                    status: result[0][0].STATUS,
+                    message: 'Your account status is Inactive\n Please Contact Support team support@compayemail.com'
                 })
         }
         else {

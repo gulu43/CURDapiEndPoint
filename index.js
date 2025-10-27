@@ -24,7 +24,7 @@ const hi = (req, res, next) => {
     next()
 }
 
-// routes with endpoints
+// routes with endpoints (base /api/v1/user)
 app.get(`${userRout}/home`, homeApiFn)
 app.post(`${userRout}/login`, upload.none(), loginApiFn)
 app.post(`${userRout}/insert`, upload.single('profile_photo'), addApiFn)
