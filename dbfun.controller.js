@@ -40,10 +40,11 @@ export const homeApiFn = async (req, res) => {
 export const loginApiFn = async (req, res) => {
     // console.dir(req.body, { depth: null, colors: true })
 
-    const { id, usersname, pass } = req.body
-    Number(id)
+    // const { id, usersname, pass } = req.body
+    // Number(id)
+    const { usersname, pass } = req.body
 
-    if (!id || !pass || !usersname) {
+    if (!pass || !usersname) {
         return res
             .status(403)
             .json({
@@ -54,11 +55,13 @@ export const loginApiFn = async (req, res) => {
     sql = 'USE USERS_DB;'
     result = await con.query(sql)
 
-    sql = 'SELECT USERSNAME, PASSWORD, STATUS FROM USERS_INFO WHERE ID= ?'
-    result = await con.query(sql, [id])
+    // sql = 'SELECT USERSNAME, PASSWORD, STATUS FROM USERS_INFO WHERE ID= ?'
+    sql = 'SELECT USERSNAME, PASSWORD, STATUS FROM USERS_INFO WHERE USERSNAME= ?'
+    result = await con.query(sql, [usersname])
     // console.log('result of getting user name password: ', result[0][0])
 
-    // console.log("compare arguments: ", pass, result[0][0].PASSWORD);
+    // console.log("compare fromdb arguments: ", pass, result[0][0].PASSWORD);
+    // console.log("compare fromdb arguments: ", pass, result[0][0].USERSNAME);
     const comparingPassword = await bcrypt.compare(pass, result[0][0].PASSWORD)
 
     if (usersname == result[0][0].USERSNAME && comparingPassword == true && result[0][0].STATUS == 'Active') {
