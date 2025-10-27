@@ -242,41 +242,63 @@ export const updateApiFn = async (req, res) => {
 // read
 export const readApiFn = async (req, res) => {
 
-    sql = 'USE USERS_DB;'
-    result = await con.query(sql)
-    // console.log('Database selected')
+    let queryID = req.query.id
+    console.log('queryID: ', queryID)
 
-    // View in Pretty Print
-    // {  `SELECT
-    // UI.ID,
-    // UI.NAME,
-    // UI.AGE,
-    // UI.USERSNAME,
-    // UI.PASSWORD,
-    // UI.STATUS,
-    // UI.CREATED_AT,
-    // UID.ADDRESS,
-    // UID.CITY,
-    // UID.COUNTRY,
-    // UID.PHONE_NO,
-    // UID.IMAGE_URL
-    // FROM
-    //     USERS_INFO AS UI
-    // INNER JOIN 
-    //     USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID
-    // ORDER BY 
-    //     UI.ID;
-    //     ` }
+    if (queryID) {
+        // console.log('value', queryID)
+        sql = 'USE USERS_DB;'
+        result = await con.query(sql)
+        // console.log('Database selected')
+        sql = `SELECT UI.ID, UI.NAME, UI.AGE, UI.USERSNAME, UI.PASSWORD, UI.STATUS, UI.CREATED_AT, UID.ADDRESS, UID.CITY, UID.COUNTRY, UID.PHONE_NO, UID.IMAGE_URL FROM USERS_INFO AS UI INNER JOIN USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID WHERE UI.ID = ? ORDER BY UI.ID;`
+        // console.log('sql value just before exe: ', sql)
+        result = await con.query(sql, [queryID])
+        console.log(result[0])
 
-    sql = `SELECT UI.ID, UI.NAME, UI.AGE, UI.USERSNAME, UI.PASSWORD, UI.STATUS, UI.CREATED_AT, UID.ADDRESS, UID.CITY, UID.COUNTRY, UID.PHONE_NO, UID.IMAGE_URL FROM USERS_INFO AS UI INNER JOIN USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID ORDER BY UI.ID;`
-    // console.log('sql value just before exe: ', sql)
+        res
+            .status(200)
+            .json(result[0])
+    } else {
+        // console.log('value', queryID)
 
-    result = await con.query(sql)
-    console.log(result[0])
+        sql = 'USE USERS_DB;'
+        result = await con.query(sql)
+        // console.log('Database selected')
 
-    res
-        .status(200)
-        .json(result[0])
+        // View in Pretty Print
+        // {  `SELECT
+        // UI.ID,
+        // UI.NAME,
+        // UI.AGE,
+        // UI.USERSNAME,
+        // UI.PASSWORD,
+        // UI.STATUS,
+        // UI.CREATED_AT,
+        // UID.ADDRESS,
+        // UID.CITY,
+        // UID.COUNTRY,
+        // UID.PHONE_NO,
+        // UID.IMAGE_URL
+        // FROM
+        //     USERS_INFO AS UI
+        // INNER JOIN 
+        //     USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID
+        // ORDER BY 
+        //     UI.ID;
+        //  
+        //    ` }
+
+        sql = `SELECT UI.ID, UI.NAME, UI.AGE, UI.USERSNAME, UI.PASSWORD, UI.STATUS, UI.CREATED_AT, UID.ADDRESS, UID.CITY, UID.COUNTRY, UID.PHONE_NO, UID.IMAGE_URL FROM USERS_INFO AS UI INNER JOIN USERS_INFO_DETAILS AS UID ON UI.ID = UID.ID ORDER BY UI.ID;`
+        // console.log('sql value just before exe: ', sql)
+
+        result = await con.query(sql)
+        console.log(result[0])
+
+        res
+            .status(200)
+            .json(result[0])
+    }
+
 }
 
 // delete

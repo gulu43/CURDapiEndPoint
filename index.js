@@ -27,9 +27,9 @@ const hi = (req, res, next) => {
 // routes with endpoints (base /api/v1/user)
 app.get(`${userRout}/home`, homeApiFn)
 app.post(`${userRout}/login`, upload.none(), loginApiFn)
-app.post(`${userRout}/insert`, upload.single('profile_photo'), addApiFn)
+app.post(`${userRout}/register`, upload.single('profile_photo'), addApiFn)
 app.patch(`${userRout}/update`, upload.single('profile_photo'), updateApiFn)
-app.get(`${userRout}/read`, hi, readApiFn)
+app.get(`${userRout}/getdata`, hi, readApiFn)
 app.delete(`${userRout}/delete`, deleteApiFn)
 
 app.use((err, req, res, next) => {
