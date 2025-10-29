@@ -1,8 +1,9 @@
 import mysql2 from 'mysql2/promise'
 import { con } from './connection.db.js'
 import bcrypt from 'bcrypt'
-import { profilePathForDbFn, publicFolderPath } from './path_and_env.js'
+import { profilePathForDbFn, publicFolderPath, removing_file_when_error } from './path_and_env.js'
 import path from 'node:path'
+import fs from 'node:fs'
 // making Path 
 // const __filename = fileURLToPath(import.meta.url)
 // const __dirname = path.dirname(__filename)
@@ -97,7 +98,7 @@ export const addApiFn = async (req, res) => {
     const { path, filename } = req.file
     // uploads+filename
     const relativeProfilePathDbStore = profilePathForDbFn(filename)
-    // console.log('like this: ', path )
+    console.log('this path from users: ', relativeProfilePathDbStore)
 
     const { name, age, usersname, password, address, city, country, phone_no } = req.body
     // + result[0]?.insertId (for id)
@@ -132,11 +133,11 @@ export const addApiFn = async (req, res) => {
             .json({ message: 'User added successfully!' })
 
     } catch (error) {
-        // {sql = `DELETE USERS_INFO WHERE ID = ${pId}`
-        // await con.query(sql)
-        // sql = `DELETE USERS_INFO_DETAILS WHERE ID = ${pId}`
-        // await con.query(sql)}
 
+        // on error file removing block
+        const returnedFilePath = removing_file_when_error(relativeProfilePathDbStore)
+        console.log("Full path to remove: ", returnedFilePath)
+        fs.unlinkSync(returnedFilePath)
 
         try {
             await con.rollback();
