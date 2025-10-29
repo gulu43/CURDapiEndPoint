@@ -145,6 +145,13 @@ export const addApiFn = async (req, res) => {
             console.error('Error during transaction rollback:', rollbackError);
         }
 
+        // duplicate entry check
+        const errorRegex = /^(Duplicate entry)/;
+        if (errorRegex.test(error.sqlMessage)) {
+            res
+                .status(403)
+                .json({ message: `User name ${usersname} is allready taken.` })
+        }
         console.error('connection error, Error adding user:', error)
 
         // to user
