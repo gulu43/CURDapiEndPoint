@@ -313,8 +313,8 @@ export const readApiFn = async (req, res) => {
 }
 
 export const resetPasswordApiFn = async (req, res) => {
-    const { username, currentPass, newPassword } = req.body
-    console.log("Both Are Comming: ", username, currentPass, newPassword)
+    const { usersname, currentPass, newPassword } = req.body
+    console.log("Both Are Comming: ", usersname, currentPass, newPassword)
     try {
 
         await con.beginTransaction()
@@ -323,7 +323,7 @@ export const resetPasswordApiFn = async (req, res) => {
         await con.query(sql)
 
         sql = 'SELECT PASSWORD FROM USERS_INFO WHERE USERSNAME= ?;'
-        result = await con.query(sql, [username])
+        result = await con.query(sql, [usersname])
         console.log(' password: ', result[0][0].PASSWORD)
 
         check = await bcrypt.compare(currentPass, result[0][0].PASSWORD)
@@ -341,7 +341,7 @@ export const resetPasswordApiFn = async (req, res) => {
             const hashedPassword = await bcrypt.hash(newPassword, 10)
             // console.log(hashedPassword)
             sql = 'UPDATE USERS_INFO SET PASSWORD= ? WHERE USERSNAME= ?;'
-            result = await con.query(sql, [hashedPassword, username])
+            result = await con.query(sql, [hashedPassword, usersname])
             console.log('result: ', result[0])
 
             await con.commit()
