@@ -312,6 +312,78 @@ export const readApiFn = async (req, res) => {
 
 }
 
+export const resetPasswordApiFn = async (req, res) => {
+    const { username, currentPass, newPassword } = req.body
+    console.log("Both Are Comming: ", username, currentPass, newPassword)
+    try {
+
+        await con.beginTransaction()
+
+        sql = 'USE USERS_DB;'
+        await con.query(sql)
+
+        sql = 'SELECT PASSWORD FROM USERS_INFO WHERE USERSNAME= ?;'
+        result = await con.query(sql, [username])
+        console.log(' password: ', result[0][0].PASSWORD)
+
+        check = await bcrypt.compare(currentPass, result[0][0].PASSWORD)
+        // check = true
+        console.log(check)
+
+        if (check == true && currentPass == newPassword) {
+            await con.commit()
+            res
+                .status(400)
+                .json({
+                    message: 'new password can not be same is current password'
+                })
+        } else if (check == true && currentPass != newPassword) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10)
+            // console.log(hashedPassword)
+            sql = 'UPDATE USERS_INFO SET PASSWORD= ? WHERE USERSNAME= ?;'
+            result = await con.query(sql, [hashedPassword, username])
+            console.log('result: ', result[0])
+
+            await con.commit()
+            res
+                .status(200)
+                .json({
+                    message: 'Password Updated'
+                })
+
+        } else if (check == false) {
+            await con.commit()
+            res
+                .status(400)
+                .json({
+                    message: 'rong password'
+                })
+        }
+        else {
+            await con.commit()
+
+            res
+                .status(400)
+                .json({
+                    message: 'something went rong'
+                })
+        }
+    } catch (error) {
+        try {
+            await con.rollback()
+            console.log('Transaction rolled back successfully.')
+        } catch (error) {
+            console.log('Error during transaction rollback:', error)
+        }
+        res
+            .status(500)
+            .json({
+                message: 'something went rong: ', error
+            })
+    }
+
+}
+
 // delete
 export const deleteApiFn = async (req, res) => {
     const { id } = req.body

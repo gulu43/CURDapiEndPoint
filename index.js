@@ -2,7 +2,7 @@ import connectionFn from './connection.db.js'
 import express from 'express'
 import cors from 'cors'
 import userRout from './config.routes.js'
-import { homeApiFn, loginApiFn, addApiFn, updateApiFn, readApiFn, deleteApiFn } from './dbfun.controller.js'
+import { homeApiFn, loginApiFn, addApiFn, updateApiFn, readApiFn, resetPasswordApiFn, deleteApiFn } from './dbfun.controller.js'
 import { publicFolderPath } from './path_and_env.js'
 import upload from './fileHandle.multer.js'
 
@@ -29,6 +29,7 @@ app.get(`${userRout}/home`, homeApiFn)
 app.post(`${userRout}/login`, upload.none(), loginApiFn)
 app.post(`${userRout}/register`, upload.single('profile_photo'), addApiFn)
 app.patch(`${userRout}/update`, upload.single('profile_photo'), updateApiFn)
+app.patch(`${userRout}/resetpassword`, upload.none(), resetPasswordApiFn)
 app.get(`${userRout}/getdata`, hi, readApiFn)
 app.delete(`${userRout}/delete`, deleteApiFn)
 
